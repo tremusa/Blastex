@@ -3,7 +3,7 @@ Blastex - Php ssl smtp email client (Send e-mail message without smtp server). W
 
 
 ## How to use
-```
+```php
 <?php
 
 // Add class
