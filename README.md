@@ -1,10 +1,12 @@
 # Blastex
 Blastex - Php ssl smtp email client (Send e-mail message without smtp server). Works on outlook.com, hotmail.com, gmail.com, yahoo.com, ovh.com (tested)
 
+### Enable php sockets extension in php.ini file !!!
 
 ## How to use
 ```php
 <?php
+// Enable first php sockets extension in php.ini !!!
 
 // Add class
 require('blastex-ssl-smtp-client.php');
