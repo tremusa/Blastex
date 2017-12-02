@@ -45,8 +45,8 @@ $m->addSubject("Hello from smtp email client !!!");
 // $m->addFile('sun.png');
 
 // Send email to hosts from recipient dns mx records
-if($m->Send()){
-  echo "Email has beeb send";
+if($m->Send() == 1){
+  echo "Email has been send";
 }
 // Smtp client last error (you can use after every method)
 echo $m->lastError;
