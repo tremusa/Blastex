@@ -14,10 +14,7 @@ error_reporting(E_ERROR | E_PARSE | E_STRICT);
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 
-
-echo "Class";
-
-class PhpMimeClient
+class Blastex
 {   
     public $DebugShow = 0;    
     public $Timeout = 60;
@@ -475,7 +472,7 @@ class PhpMimeClient
 echo "Class end<br>";
 
 // Create object
-$m = new PhpMimeClient();
+$m = new Blastex();
 
 // Show logs
 $m->Debug(1);
