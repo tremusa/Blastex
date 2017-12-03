@@ -1,7 +1,7 @@
 <?php
 
 /*
-* Blastex - Php Ssl Smtp Email Client 
+* Blastex - Php Email Client 
 * @autor
 * Marcin Łukaszewski hello@breakermind.com
 *
@@ -9,10 +9,10 @@
 * https://pl.wikipedia.org/wiki/Multipurpose_Internet_Mail_Extensions
 */
 
-error_reporting(E_ALL);
-error_reporting(E_ERROR | E_PARSE | E_STRICT);
-ini_set('display_errors', 1);
-ini_set('display_startup_errors', 1);
+//error_reporting(E_ALL);
+//error_reporting(E_ERROR | E_PARSE | E_STRICT | E_WARNING);
+//ini_set('display_errors', 1);
+//ini_set('display_startup_errors', 1);
 
 class Blastex
 {   
@@ -66,6 +66,10 @@ class Blastex
 
     function Debug($enable = 1){
         $this->DebugShow = $enable;
+    }
+
+    function disableSelfSigned($enable = 0){
+        $this->AllowSelfSigned = $enable;
     }
 
     function addText($textMsg){
@@ -185,7 +189,7 @@ class Blastex
         }else if(!empty($this->ReplyTo['email'])){
             $header .= "Reply-To: <".$this->ReplyTo['email'].">\r\n";
         }
-        $header .= "Return-Path: <".$fromEmail.">\r\n";         
+        // $header .= "Return-Path: <".$fromEmail.">\r\n";         
         $header .= "MIME-Version: 1.0 \r\n";
         $header .= "Content-Transfer-Encoding: 8bit \r\n";        
         $header .= "Content-Type: multipart/mixed; boundary=\"$boundary1\"\r\n\r\n";   
@@ -377,7 +381,11 @@ class Blastex
                         }
 
                         // starttls
-                        $logi .= stream_socket_enable_crypto($socket, true, STREAM_CRYPTO_METHOD_SSLv23_CLIENT) . "<br>";
+                        $sslerror = stream_socket_enable_crypto($socket, true, STREAM_CRYPTO_METHOD_SSLv23_CLIENT) . "<br>";
+                        if($sslerror == 0){
+                        	$this->lastError = "[SSL_HANDSHAKE_ERROR_NOT_VALID_SERVER_CERTIFICATE]";
+                        	return 0;
+                        }
 
                         // Send ehlo
                         $f1 = "EHLO ".$this->heloHostname."\r\n";
@@ -399,7 +407,8 @@ class Blastex
                                 $f1 = "mail from: <".$this->From['email'].">\r\n";
                                 $logi .= $f1. "<br>";
                                 fwrite($socket, $f1) . "<br>";
-                                $logi .= fread($socket,8192) . "<br>";
+                                $serr = fread($socket,8192) . "<br>";
+                                $logi .= $serr;
                             }else{
                                 $this->lastError = "Error From: email";
                                 return 0;
@@ -411,7 +420,9 @@ class Blastex
                             $f1 = "rcpt to: <".$e['email'].">\r\n";
                             $logi .= $f1. "<br>";
                             fwrite($socket, $f1) . "<br>";
-                            $logi .= fread($socket,8192) . "<br>";
+                            $serr = fread($socket,8192) . "<br>";
+                            $logi .= $serr;
+                            
                         }else{
                             $this->lastError = "Error To: email";
                             return 0;
@@ -447,7 +458,7 @@ class Blastex
                     }
                     $emailSend = 1;
                 }catch(Exception $e){
-                    echo $e;
+                    $logi .= $e->getMessage();
                     $this->lastError = "[SEND_ERROR_EXCEPTION]";
                     return 0;
                 }                  
@@ -467,48 +478,55 @@ class Blastex
 
 }// end class
 
+
 /*
 
-echo "Class end<br>";
-
-// Create object
+// Create object for authenticate (User@email, Password)
 $m = new Blastex();
+
+// With authentication
+// $m = new Blastex('info@domain.com','Password');
 
 // Show logs
 $m->Debug(1);
 
+// Disable Self signed server vertificate
+$m->disableSelfSigned(0);
+
 // hello hostname
-$m->addHeloHost("qflash.pl");
+$m->addHeloHost("domain.com");
 
 // Add from
-$m->addFrom("info@qflash.pl", "Ania Bania");
+$m->addFrom("info@domain.com", "Ania Bania");
 
 // Add to
-$m->addTo("xxx@breakermind.com", "Albercik Kutafonek");
-$m->addTo("xxx@gmail.com", "Adela Mela");
+$m->addTo("email@gmail.com", "Adela Mela");
+$m->addTo("hello@domain.com", "Maxiu");
 
 // Add Cc
-$m->addCc("zzz@gmail.com", "Ben");
-$m->addCc("ccc@yahoo.com");
-$m->addCc("aaa@outlook.com");
+$m->addCc("email@gmail.com", "Ben");
+$m->addCc("mailbox@yahoo.com");// 
 
 // Add Bcc
-$m->addBcc("boos@domain.com", "BOSS");    
+$m->addBcc("boss@gmail.com", "SMTP BOSS");    
+$m->addBcc("mailbox@outlook.com");
 
 $m->addText("Hello message");
 
-$m->addHtml("<h1>Hello message html</h1>");
+$m->addHtml('<h1>Hello message html</h1> <br> My photo <img src="cid:zenek123">');
 
-$m->addSubject("Hello from smtp email client !!!");
+$m->addSubject("Blastex - Php smtp email client!");
 
 // Add files inline
-// $m->addFile('photo.jpg',"zenek123");
+$m->addFile('photo.jpg',"zenek123");
 
 // Add file
-// $m->addFile('sun.png');
+$m->addFile('sun.png');
 
 // Send email from dns mx hosts
 $m->Send();
+
+// Show last error
 echo $m->lastError;
 
 // Create mime message: $msgText, $msgHtml, $subject, $fromName, $fromEmail, $replyTo
@@ -524,3 +542,6 @@ echo $m->lastError;
 // echo nl2br($m->cutBcc($m->getMime()));
 
 */
+
+?>
+
