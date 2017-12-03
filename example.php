@@ -42,6 +42,8 @@ $m->addFile('sun.png');
 
 // Send email from dns mx hosts
 $m->Send();
+
+// Show last error (you can add after every methods)
 echo $m->lastError;
 
 // Create mime message: $msgText, $msgHtml, $subject, $fromName, $fromEmail, $replyTo
