@@ -42,9 +42,10 @@ $m->addHtml("<h1>Hello message html</h1>");
 $m->addSubject("Hello from smtp email client !!!");
 
 // Add files inline
-// $m->addFile('photo.jpg',"zenek123");
+$m->addFile('photo.jpg',"zenek123");
+
 // Add file
-// $m->addFile('sun.png');
+$m->addFile('sun.png');
 
 // Send email to hosts from recipient dns mx records
 if($m->Send() == 1){
