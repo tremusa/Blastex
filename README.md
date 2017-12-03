@@ -38,7 +38,7 @@ $m->addCc("aaa@outlook.com");
 $m->addBcc("boos@domain.com", "BOSS");    
 
 $m->addText("Hello message");
-$m->addHtml("<h1>Hello message html</h1>");
+$m->addHtml('<h1>Hello message html</h1> <br> My photo <img src="cid:photo.zenek123">');
 $m->addSubject("Hello from smtp email client !!!");
 
 // Add files inline
