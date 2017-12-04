@@ -1,7 +1,7 @@
 <?php
 
 /*
-* Blastex - Php Email Client 
+* Blastex - Php Email Client (Send email without smtp server)
 * @autor
 * Marcin Łukaszewski hello@breakermind.com
 *
