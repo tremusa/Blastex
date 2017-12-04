@@ -17,6 +17,7 @@ $m->disableSelfSigned(1);
 $m->addHostname("ns0.ovh.net");
 // Add smtp port 25, 587
 $m->addPort(25);
+
 // Smtp server email
 $m->addUser('email@breakermind.com');
 // Smtp server password
