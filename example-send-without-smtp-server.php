@@ -1,6 +1,6 @@
 <?php
 // Add class
-require('blastex-ssl-smtp-client.php');
+require('blastex-send-without-smtp-server.php');
 
 echo "Sending emails... <br>";
 
