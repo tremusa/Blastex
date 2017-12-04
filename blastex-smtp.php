@@ -1,7 +1,6 @@
 <?php
-
 /*
-* Blastex - Php Email Client 
+* Blastex - Php Email Client SSL/TLS
 * @autor
 * Marcin Łukaszewski hello@breakermind.com
 *
