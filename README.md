@@ -5,6 +5,9 @@ Blastex - Php ssl smtp email client (Send e-mail message without smtp server). W
 
 ## How to use (Blastex smtp client SSL/TLS)
 ```php
+// Add class
+require('blastex-smtp.php');
+
 // With authentication (don't need use addPassword and addUser after this)
 // $m = new BlastexSmtp('email@breakermind.com','Password');
 
