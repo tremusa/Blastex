@@ -446,7 +446,7 @@ class BlastexSmtp
                         return 0;
                     }
 
-                    foreach ($this->toList as $e) {       
+		    foreach ($this->toList as $e) {       
                         if(!empty($e['email'])){
                             $f1 = "rcpt to: <".$e['email'].">\r\n";
                             $logi .= $f1. "<br>";
@@ -462,7 +462,43 @@ class BlastexSmtp
                             $this->lastError = "[ERROR_TO_EMAIL]";
                             return 0;
                         }        
-                	}
+                    }
+
+		    foreach ($this->ccList as $e) {       
+                        if(!empty($e['email'])){
+                            $f1 = "rcpt to: <".$e['email'].">\r\n";
+                            $logi .= $f1. "<br>";
+                            fwrite($socket, $f1) . "<br>";
+                            $serr = fread($socket,8192) . "<br>";
+                            $logi .= $serr;
+                            // if error
+                            if(strpos($serr, '250 ') === FALSE){
+                            	$this->lastError = $serr;
+                            	return 0;
+                            }	                            
+                        }else{
+                            $this->lastError = "[ERROR_TO_EMAIL]";
+                            return 0;
+                        }        
+                    }
+
+                    foreach ($this->bccList as $e) {       
+                        if(!empty($e['email'])){
+                            $f1 = "rcpt to: <".$e['email'].">\r\n";
+                            $logi .= $f1. "<br>";
+                            fwrite($socket, $f1) . "<br>";
+                            $serr = fread($socket,8192) . "<br>";
+                            $logi .= $serr;
+                            // if error
+                            if(strpos($serr, '250 ') === FALSE){
+                            	$this->lastError = $serr;
+                            	return 0;
+                            }	                            
+                        }else{
+                            $this->lastError = "[ERROR_TO_EMAIL]";
+                            return 0;
+                        }        
+                    }
 
                     $f1 = "DATA\r\n";                
                     $logi .= $f1 . "<br>";
