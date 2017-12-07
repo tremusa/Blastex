@@ -594,7 +594,7 @@ $m->addBcc("email@qflash.pl", "Henio");
 // Text message
 $m->addText("Hello message");
 // Html message
-$m->addHtml('<h1>Nowa wiadomość</h1> <br> CO znowu zjebali<img src="cid:zenek123">');
+$m->addHtml('<h1>Nowa wiadomość</h1> <br> CO chcesz ?! Moze buzi :P <br> <img src="cid:zenek123">');
 // Message subject
 $m->addSubject("Blastex - Php smtp email client!");
 
