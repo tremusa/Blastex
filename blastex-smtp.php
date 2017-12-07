@@ -1,6 +1,7 @@
 <?php
+
 /*
-* Blastex - Php Email Client SSL/TLS
+* Blastex - Php Email Client 
 * @autor
 * Marcin Łukaszewski hello@breakermind.com
 *
@@ -19,6 +20,8 @@ class BlastexSmtp
     public $Timeout = 60;
     public $mime;
     public $filesList;
+    // Allow only with secure SSL/TLS connection 1 or 0
+    public $addTLS = 1;
     // To: Cc: and Bcc:
     public $toList;
     public $ccList;    
@@ -31,7 +34,7 @@ class BlastexSmtp
     public $Subject = "";
 
     // EHLO hostname\r\n
-    public $heloHostname = 'local.host';
+    public $heloHostname = 'qflash.pl';
     
     // charset: utf-8, utf-16, iso-8859-2, iso-8859-1
     public $mEncoding = 'utf-8';
@@ -58,6 +61,10 @@ class BlastexSmtp
             error_reporting(E_ALL);
             error_reporting(E_ERROR | E_PARSE | E_STRICT);
         }        
+    }
+
+    function Tls($enable = 1){
+        $this->addTLS = $enable;
     }
 
     function Debug($enable = 1){
@@ -194,7 +201,7 @@ class BlastexSmtp
         if(!empty($cc)){ $header .= "Cc: ".$cc."\r\n"; }
         if(!empty($bcc)){ $header .= "Bcc: ".$bcc."\r\n"; }
         // Data 
-        $header .= "Subject: =?".$this->mEncoding."?B?".base64_encode($subject)."?=\r\n";
+        $header .= "Subject:=?".$this->mEncoding."?B?".base64_encode($subject)."?=\r\n";
         // Add reply to
         if(!empty($this->ReplyTo['email']) && !empty($this->ReplyTo['name'])){            
             $header .= "Reply-To: ".$this->ReplyTo['name']." <".$this->ReplyTo['email'].">\r\n";
@@ -357,7 +364,7 @@ class BlastexSmtp
                         }
                     }                        
 
-                    if(strpos($logi, "STARTTLS") >= 0){
+                    if(strpos($logi, "STARTTLS") >= 0 && $this->addTLS == 1){
                         // Start tls connection
                         fwrite($socket, "STARTTLS\r\n") . "<br>";
                         $serr = fread($socket,8192) . "<br>";
@@ -366,29 +373,31 @@ class BlastexSmtp
                         if(strpos($serr, '220 ') === FALSE){
                         	$this->lastError = $serr;
                         	return 0;
+                        }else{
+                            // Run encryption starttls
+                            $sslerror = stream_socket_enable_crypto($socket, true, STREAM_CRYPTO_METHOD_SSLv23_CLIENT) . "<br>";
+                            if($sslerror == 0){
+                                $this->lastError = "[SSL_HANDSHAKE_ERROR_NOT_VALID_SERVER_CERTIFICATE]";
+                                return 0;
+                            }
+
+                            // Send ehlo secured connection
+                            $f1 = "EHLO ".$this->heloHostname."\r\n";
+                            $logi .= $f1. "<br>";
+                            fwrite($socket, $f1) . "<br>";
+                            $serr = fread($socket,8192) . "<br>";
+                            $logi .= $serr;
+                            // if error
+                            if(strpos($serr, '250 ') === FALSE){
+                                $this->lastError = $serr;
+                                return 0;
+                            }
                         }
-                    }else{
-                        $lastError = "Error start SSL connection. Command STARTTLS not supported.";
-                        return 0;
-                    }
-
-                    // starttls
-                    $sslerror = stream_socket_enable_crypto($socket, true, STREAM_CRYPTO_METHOD_SSLv23_CLIENT) . "<br>";
-                    if($sslerror == 0){
-                    	$this->lastError = "[SSL_HANDSHAKE_ERROR_NOT_VALID_SERVER_CERTIFICATE]";
-                    	return 0;
-                    }
-
-                    // Send ehlo
-                    $f1 = "EHLO ".$this->heloHostname."\r\n";
-                    $logi .= $f1. "<br>";
-                    fwrite($socket, $f1) . "<br>";
-                    $serr = fread($socket,8192) . "<br>";
-                    $logi .= $serr;
-                    // if error
-                    if(strpos($serr, '250 ') === FALSE){
-                    	$this->lastError = $serr;
-                    	return 0;
+                    }else{                        
+                        if($this->addTLS == 1){
+                            $lastError = "[STARTTLS_NOT_ALLOWED]";
+                            return 0;
+                        }
                     }
 
                     if(!empty($this->smtpUser) && !empty($this->smtpPassword)){
@@ -520,8 +529,12 @@ $m = new BlastexSmtp();
 
 // Show logs
 $m->Debug(0);
-// Disable Self signed server certificate
-$m->disableSelfSigned(1);
+
+// Disable ssl/tls (default send emails with secure connections)
+// $m->Tls(0);
+
+// Disable Self signed external smtp server certificates
+$m->disableSelfSigned(0);
 
 // Smtp server hostname
 $m->addHostname("ns0.ovh.net");
@@ -560,7 +573,6 @@ if($m->Send() == 1){
 	// Show last error
 	echo $m->lastError;	
 }
-
 
 // Create mime message: $msgText, $msgHtml, $subject, $fromName, $fromEmail, $replyTo
 // $m->createMime("Witaj księżniczko !",'<h1>Witaj Maniu <img src="cid:zenek123"> </h1>',"Wesołych świąt życzę!","Heniek Wielki", "heniek@domain.xx");
