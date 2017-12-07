@@ -34,7 +34,7 @@ class BlastexSmtp
     public $Subject = "";
 
     // EHLO hostname\r\n
-    public $heloHostname = 'qflash.pl';
+    public $heloHostname = 'local.host';
     
     // charset: utf-8, utf-16, iso-8859-2, iso-8859-1
     public $mEncoding = 'utf-8';
