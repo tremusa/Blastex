@@ -459,7 +459,7 @@ class BlastexSmtp
                             	return 0;
                             }	                            
                         }else{
-                            $this->lastError = "[ERROR_TO_EMAIL]";
+                            $this->lastError = "[ERROR_TO_EMAIL] " . $e['email'];
                             return 0;
                         }        
                     }
@@ -477,7 +477,7 @@ class BlastexSmtp
                             	return 0;
                             }	                            
                         }else{
-                            $this->lastError = "[ERROR_TO_EMAIL]";
+                            $this->lastError = "[ERROR_CC_EMAIL] " . $e['email'];
                             return 0;
                         }        
                     }
@@ -495,7 +495,7 @@ class BlastexSmtp
                             	return 0;
                             }	                            
                         }else{
-                            $this->lastError = "[ERROR_TO_EMAIL]";
+                            $this->lastError = "[ERROR_BCC_EMAIL] " . $e['email'];
                             return 0;
                         }        
                     }
@@ -563,14 +563,15 @@ class BlastexSmtp
 // $m = new BlastexSmtp('user6@hotmail.com','Password');
 $m = new BlastexSmtp();
 
-// Show logs
-$m->Debug(0);
+// Show logs (default: 0 - disabled)
+$m->Debug(1);
 
 // Disable ssl/tls (default send emails with secure connections)
 // $m->Tls(0);
 
-// Disable Self signed external smtp server certificates
-$m->disableSelfSigned(0);
+// Disable Self signed recipient smtp server certificate
+// (default: allow self signes ssl/tls certificates)
+// $m->disableSelfSigned(0);
 
 // Smtp server hostname
 $m->addHostname("ns0.ovh.net");
@@ -581,9 +582,9 @@ $m->addUser('email@breakermind.com');
 // Smtp server password
 $m->addPassword("Password");
 
-// Add from
+// Add From
 $m->addFrom("email@breakermind.com", "Ania Bez pic");
-// Add to
+// Add To email
 $m->addTo("email@gmail.com", "Maxiu");
 // Add Cc
 $m->addCc("email@yahoo.com", "Yahoo email");// 
