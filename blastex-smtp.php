@@ -201,7 +201,7 @@ class BlastexSmtp
         if(!empty($cc)){ $header .= "Cc: ".$cc."\r\n"; }
         if(!empty($bcc)){ $header .= "Bcc: ".$bcc."\r\n"; }
         // Data 
-        $header .= "Subject:=?".$this->mEncoding."?B?".base64_encode($subject)."?=\r\n";
+        $header .= "Subject: =?".$this->mEncoding."?B?".base64_encode($subject)."?=\r\n";
         // Add reply to
         if(!empty($this->ReplyTo['email']) && !empty($this->ReplyTo['name'])){            
             $header .= "Reply-To: ".$this->ReplyTo['name']." <".$this->ReplyTo['email'].">\r\n";
