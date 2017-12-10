@@ -451,7 +451,12 @@ class Blastex
                             $logi .= $f1. "<br>";
                             fwrite($socket, $f1) . "<br>";
                             $serr = fread($socket,8192) . "<br>";
-                            $logi .= $serr;                            
+                            $logi .= $serr;
+                            // if error
+                            if(strpos($serr, '250 ') === FALSE){
+                                $this->lastError = $serr;
+                                return 0;
+                            }
                         }else{
                             $this->lastError = "Error To: email " . $serr;
                             return 0;
@@ -459,9 +464,15 @@ class Blastex
                         $f1 = "DATA\r\n";                
                         $logi .= $f1 . "<br>";
                         fwrite($socket, $f1) . "<br>";
-                        $logi .= fread($socket,8192) . "<br>";
-
-                        // echo fwrite($socket, "Date: ".time()."\r\nTo: <to-email@boome.com>\r\nFrom:<zour-email@cool.xx\r\nSubject:Hello from php socket tls\r\n.\r\n");                                            
+                        $serr .= fread($socket,8192) . "<br>";
+                        $logi .= $serr;
+                        // if error
+                        if(strpos($serr, '354 ') === FALSE){
+                            $this->lastError = $serr;
+                            return 0;
+                        }
+                        // Mime message example
+                        // echo fwrite($socket, "Date: ".time()."\r\nTo: <to-email@boome.com>\r\nFrom:<zour-email@cool.xx\r\nSubject:Hello from php socket tls\r\n.\r\n");
                         if($delBcc == 1){
                             // Cut Bcc line
                             $mimeMsg = $this->cutBcc($this->getMime());
@@ -471,11 +482,23 @@ class Blastex
                         }
                         // Send email to server
                         fwrite($socket, $mimeMsg) . "<br>";
-                        $logi .= fread($socket,8192) . "<br>";
+                        $serr .= fread($socket,8192) . "<br>";
+                        $logi .= $serr;
+                        // if error
+                        if(strpos($serr, '250 ') === FALSE){
+                            $this->lastError = $serr;
+                            return 0;
+                        }
                         
                         // Exit
                         fwrite($socket, "QUIT\r\n") . "<br>";
-                        $logi .= fread($socket,8192) . "<br>";
+                        $serr .= fread($socket,8192) . "<br>";
+                        $logi .= $serr;
+                        // if error
+                        if(strpos($serr, '221 ') === FALSE){
+                            $this->lastError = $serr;
+                            return 0;
+                        }
                         $logi .= "<br><br>";
 
                         if($this->DebugShow == 1){
@@ -571,4 +594,3 @@ echo $m->lastError;
 */
 
 ?>
-
