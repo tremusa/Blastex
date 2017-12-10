@@ -1,14 +1,12 @@
 <?php
-
 /*
-* Blastex - Php Email Client (Send email without smtp server)
+* Blastex - Php Email Client 
 * @autor
 * Marcin Łukaszewski hello@breakermind.com
 *
 * Smtp create multipart mime message article
 * https://pl.wikipedia.org/wiki/Multipurpose_Internet_Mail_Extensions
 */
-
 //error_reporting(E_ALL);
 //error_reporting(E_ERROR | E_PARSE | E_STRICT | E_WARNING);
 //ini_set('display_errors', 1);
@@ -17,7 +15,7 @@
 class Blastex
 {   
     public $DebugShow = 0;    
-    public $Timeout = 60;
+    public $Timeout = 15;
     public $mime;
     public $filesList;
     // To: Cc: and Bcc:
@@ -32,7 +30,7 @@ class Blastex
     public $Subject = "";
 
     // EHLO hostname\r\n
-    public $heloHostname = 'localhost';
+    public $heloHostname = 'local.host';
     
     // charset: utf-8, utf-16, iso-8859-2, iso-8859-1
     public $mEncoding = 'utf-8';
@@ -85,8 +83,8 @@ class Blastex
     }
 
     function addFrom($email, $name = ""){       
-        if(filter_var($email, FILTER_VALIDATE_EMAIL)){
-            $this->From['email'] = $email;
+        if(filter_var(trim($email), FILTER_VALIDATE_EMAIL)){
+            $this->From['email'] = trim($email);
             $this->From['name'] = $name;            
             return 1;
         }
@@ -95,8 +93,8 @@ class Blastex
     }
 
     function addReplyTo($email, $name = ""){       
-        if(filter_var($email, FILTER_VALIDATE_EMAIL)){
-            $this->ReplyTo['email'] = $email;
+        if(filter_var(trim($email), FILTER_VALIDATE_EMAIL)){
+            $this->ReplyTo['email'] = trim($email);
             $this->ReplyTo['name'] = $name;            
             return 1;
         }
@@ -117,9 +115,9 @@ class Blastex
 
     function addCc($email, $name = ""){
         $i = count($this->ccList)+1;
-        if(filter_var($email, FILTER_VALIDATE_EMAIL)){
+        if(filter_var(trim($email), FILTER_VALIDATE_EMAIL)){
             $this->ccList[$i]['name'] = $name;
-            $this->ccList[$i]['email'] = $email;
+            $this->ccList[$i]['email'] = trim($email);
             return 1;
         }
         $this->lastError = "Invalid Cc email";
@@ -128,9 +126,9 @@ class Blastex
 
     function addBcc($email, $name = ""){
         $i = count($this->bccList)+1;
-        if(filter_var($email, FILTER_VALIDATE_EMAIL)){
+        if(filter_var(trim($email), FILTER_VALIDATE_EMAIL)){
             $this->bccList[$i]['name'] = $name;
-            $this->bccList[$i]['email'] = $email;
+            $this->bccList[$i]['email'] = trim($email);
             return 1;
         }
         $this->lastError = "Invalid Bcc email";
@@ -139,9 +137,9 @@ class Blastex
 
     function addTo($email, $name = ""){
         $i = count($this->toList)+1;
-        if(filter_var($email, FILTER_VALIDATE_EMAIL)){
+        if(filter_var(trim($email), FILTER_VALIDATE_EMAIL)){
             $this->toList[$i]['name'] = $name;
-            $this->toList[$i]['email'] = $email;
+            $this->toList[$i]['email'] = trim($email);
             return 1;
         }
         $this->lastError = "Invalid To email";
@@ -362,57 +360,89 @@ class Blastex
                         // Send ehlo
                         fwrite($socket, "EHLO ".$this->heloHostname."\r\n") . "<br>";
                         $logi .= fread($socket,8192) . "<br>";
-
-                        if(strpos($logi, '250 ') < 1){
+                        if(strpos($logi, '250 ') === FALSE){
                             $logi .= fread($socket,8192) . "<br>";
-                            if (strpos($logi, '503 ') > 0 || strpos($logi, '501 ') > 0) {
+                            if (strpos($logi, '503 ') >= 0 || strpos($logi, '501 ') >= 0) {
                                 $this->lastError = "Error ehlo hostanme";
                                 return 0;
                             }
                         }                        
 
-                        if(strpos($logi, "STARTTLS") > 0){
+                        if(strpos($logi, "STARTTLS") >= 0){
                             // Start tls connection
                             fwrite($socket, "STARTTLS\r\n") . "<br>";
-                            $logi .= fread($socket,8192);
-                        }else{
-                            $lastError = "Error start SSL connection. Command STARTTLS not supported.";
-                            return 0;
-                        }
+                            $serr = fread($socket,8192) . "<br>";
+                            $logi .= $serr;
+                            // if error
+                            if(strpos($serr, '220 ') === FALSE){
+                                $this->lastError = $serr;
+                                return 0;
+                            }else{
+                                // Run encryption starttls
+                                $sslerror = stream_socket_enable_crypto($socket, true, STREAM_CRYPTO_METHOD_SSLv23_CLIENT) . "<br>";
+                                if($sslerror == 0){
+                                    $this->lastError = "[SSL_HANDSHAKE_ERROR_NOT_VALID_SERVER_CERTIFICATE]";
+                                    return 0;
+                                }
 
-                        // starttls
-                        $sslerror = stream_socket_enable_crypto($socket, true, STREAM_CRYPTO_METHOD_SSLv23_CLIENT) . "<br>";
-                        if($sslerror == 0){
-                        	$this->lastError = "[SSL_HANDSHAKE_ERROR_NOT_VALID_SERVER_CERTIFICATE]";
-                        	return 0;
-                        }
-
-                        // Send ehlo
-                        $f1 = "EHLO ".$this->heloHostname."\r\n";
-                        $logi .= $f1. "<br>";
-                        fwrite($socket, $f1) . "<br>";
-                        $logi .= fread($socket,8192) . "<br>";
-
-                        if(!empty($this->smtpUser) && !empty($this->smtpPassword)){
-                            fwrite($socket, "AUTH LOGIN\r\n") . "<br>";
-                            $logi .= fread($socket,8192) . "<br>";
-                            
-                            fwrite($socket, base64_encode($this->smtpUser)."\r\n") . "<br>";
-                            $logi .= fread($socket,8192) . "<br>";
-
-                            fwrite($socket, base64_encode($this->smtpPassword)."\r\n") . "<br>";
-                            $logi .= fread($socket,8192) . "<br>";
-                        }else{
-                            if(!empty($this->From['email'])){                                
-                                $f1 = "mail from: <".$this->From['email'].">\r\n";
+                                // Send ehlo secured connection
+                                $f1 = "EHLO ".$this->heloHostname."\r\n";
                                 $logi .= $f1. "<br>";
                                 fwrite($socket, $f1) . "<br>";
                                 $serr = fread($socket,8192) . "<br>";
                                 $logi .= $serr;
-                            }else{
-                                $this->lastError = "Error From: email";
+                                // if error
+                                if(strpos($serr, '250 ') === FALSE){
+                                    $this->lastError = $serr;
+                                    return 0;
+                                }
+                            }
+                        }
+
+                        if(!empty($this->smtpUser) && !empty($this->smtpPassword)){
+
+                            fwrite($socket, "AUTH LOGIN\r\n") . "<br>";
+                            $serr = fread($socket,8192) . "<br>";
+                            $logi .= $serr;
+                            // if error
+                            if(strpos($serr, '334 ') === FALSE){
+                                $this->lastError = $serr;
                                 return 0;
-                            }                            
+                            }
+
+                            fwrite($socket, base64_encode($this->smtpUser)."\r\n") . "<br>";
+                            $serr = fread($socket,8192) . "<br>";
+                            $logi .= $serr;
+                            // if error
+                            if(strpos($serr, '334 ') === FALSE){
+                                $this->lastError = $serr;
+                                return 0;
+                            }
+
+                            fwrite($socket, base64_encode($this->smtpPassword)."\r\n") . "<br>";
+                            $serr = fread($socket,8192) . "<br>";
+                            $logi .= $serr;
+                            // if error
+                            if(strpos($serr, '235 ') === FALSE){
+                                $this->lastError = $serr;
+                                return 0;
+                            }
+                        }
+
+                        if(!empty($this->From['email'])){                                
+                            $f1 = "mail from: <".$this->From['email'].">\r\n";
+                            $logi .= $f1. "<br>";
+                            fwrite($socket, $f1) . "<br>";
+                            $serr = fread($socket,8192) . "<br>";
+                            $logi .= $serr;
+                            // if error
+                            if(strpos($serr, '250 ') === FALSE){
+                                $this->lastError = $serr;
+                                return 0;
+                            }
+                        }else{
+                            $this->lastError = "[ERROR_FROM_EMAIL]";
+                            return 0;
                         }
 
                         // Single to email            
@@ -421,10 +451,9 @@ class Blastex
                             $logi .= $f1. "<br>";
                             fwrite($socket, $f1) . "<br>";
                             $serr = fread($socket,8192) . "<br>";
-                            $logi .= $serr;
-                            
+                            $logi .= $serr;                            
                         }else{
-                            $this->lastError = "Error To: email";
+                            $this->lastError = "Error To: email " . $serr;
                             return 0;
                         }        
                         $f1 = "DATA\r\n";                
@@ -457,12 +486,13 @@ class Blastex
                         fclose($socket);                                            
                     }
                     $emailSend = 1;
+                    return 1;
                 }catch(Exception $e){
                     $logi .= $e->getMessage();
                     $this->lastError = "[SEND_ERROR_EXCEPTION]";
                     return 0;
                 }                  
-            }
+            }        
         } 
         return 1;    
     }
@@ -481,11 +511,8 @@ class Blastex
 
 /*
 
-// Create object for authenticate (User@email, Password)
+// Create object
 $m = new Blastex();
-
-// With authentication
-// $m = new Blastex('info@domain.com','Password');
 
 // Show logs
 $m->Debug(1);
